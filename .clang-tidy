@@ -1,0 +1,2 @@
+Checks: 'bugprone-*,modernize-*,readability-*,-mcs*'
+WarningsAsErrors: 'bugprone-*'

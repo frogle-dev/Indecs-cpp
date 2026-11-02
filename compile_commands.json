@@ -1,0 +1,6 @@
+[
+{
+  "directory": "/home/jonah/Programming/cpp/Indecs",
+  "arguments": ["/nix/store/i52d7j6ma8bh4ggg4r2hl4af7bychdpa-clang-wrapper-21.1.8/bin/clang++", "-c", "-Qunused-arguments", "-m64", "-g", "-Wall", "-Wextra", "-Werror", "-Wpedantic", "-O0", "-std=c++23", "-fsanitize=address", "-fsanitize=undefined", "-o", "build/.objs/Indecs/linux/x86_64/debug/src/main.cpp.o", "src/main.cpp"],
+  "file": "src/main.cpp"
+}]
