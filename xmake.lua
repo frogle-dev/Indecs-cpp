@@ -1,7 +1,8 @@
 add_rules("mode.debug", "mode.release", "plugin.compile_commands.autoupdate")
+
 set_languages("c++23")
 
-set_warnings("all", "extra", "error", "pedantic")
+set_warnings("all", "extra", "error", "pedantic", "conversion", "shadow")
 
 set_defaultmode("debug")
 
@@ -12,4 +13,6 @@ end
 
 target("Indecs")
 set_kind("binary")
-add_files("src/*.cpp")
+add_files("src/*.cpp", "tests/*.cpp")
+
+add_includedirs("include")

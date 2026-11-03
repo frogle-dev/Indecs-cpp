@@ -32,6 +32,8 @@
             llvm.clang-tools
 
             valgrind
+
+            seer
           ];
 
           hardeningDisable = [ "fortify" ];
