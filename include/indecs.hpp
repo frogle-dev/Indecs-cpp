@@ -39,7 +39,10 @@ template <typename... Components> class Archetype {
     }
 
   public:
-    // using ComponentSet = std::tuple<Ts...>;
+    template <IsInPack<Components...> T>
+    [[nodiscard]] auto get(size_t idx) const -> T const & {
+        return std::get<std::vector<T>>(components)[idx];
+    }
 
     template <typename... Us>
     static constexpr bool matches = sizeof...(Us) == sizeof...(Components) &&
