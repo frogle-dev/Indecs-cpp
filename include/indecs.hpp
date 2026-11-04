@@ -3,22 +3,6 @@
 #include <unordered_map>
 #include <vector>
 
-struct Position {
-    float x, y;
-};
-
-struct Velocity {
-    float vx, vy;
-};
-
-struct Acceleration {
-    float ax, ay;
-};
-
-struct Health {
-    float hp;
-};
-
 namespace Indecs {
 using Entity = size_t;
 
@@ -54,12 +38,10 @@ template <typename... Components> class Archetype {
     }
 
     /// pushes an entity and the archetype data into the archetype
-    template <typename... Ts>
-        requires(matches<Ts...>)
-    void pushBack(Entity entity, Ts... data) {
+    void pushBack(Entity entity, Components... data) {
         entities.push_back(entity);
 
-        (getComponentVec<Ts>().push_back(std::move(data)), ...);
+        (getComponentVec<Components>().push_back(std::move(data)), ...);
     }
 
     void swapAndDecrSize(size_t idx) {
