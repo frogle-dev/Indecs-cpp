@@ -1,5 +1,6 @@
 #pragma once
 
+#include <cassert>
 #include <unordered_map>
 #include <vector>
 
@@ -36,6 +37,13 @@ template <typename... Components> class Archetype {
     static constexpr bool matches = sizeof...(Us) == sizeof...(Components) &&
                                     (IsInPack<Us, Components...> && ...);
 
+    void assertSameSizes() const {
+#ifndef NDEBUG
+        forEachVector(
+            [&](auto &vec) -> void { assert(vec.size() == entities.size()); });
+#endif
+    }
+
     [[nodiscard]]
     auto size() const -> size_t {
         return entities.size();
@@ -46,6 +54,8 @@ template <typename... Components> class Archetype {
         entities.push_back(entity);
 
         (getComponentVec<Components>().push_back(std::move(data)), ...);
+
+        assertSameSizes();
     }
 
     void swapAndDecrSize(size_t idx) {

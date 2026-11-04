@@ -1,3 +1,5 @@
+#include <catch2/catch_test_macros.hpp>
+
 #include <indecs.hpp>
 
 struct Position {
@@ -16,7 +18,9 @@ struct Health {
     float hp;
 };
 
-auto main() -> int {
+TEST_CASE("Archetype pushBack", "[archetype]") {
     auto player = Indecs::Archetype<Position, Velocity, Health>();
-    player.pushBack(0, Position{0, 0}, Velocity{0, 0}, Health{50});
+    player.pushBack(0, Position{5, 10}, Velocity{1, 2}, Health{50});
+
+    REQUIRE(player.size() == 1);
 }

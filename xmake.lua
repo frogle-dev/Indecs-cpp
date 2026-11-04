@@ -1,7 +1,7 @@
 add_rules("mode.debug", "mode.release", "plugin.compile_commands.autoupdate")
 
 set_languages("c++23")
-set_warnings("all", "extra", "error", "pedantic", "conversion", "shadow")
+set_warnings("all", "extra", "error", "pedantic")
 set_defaultmode("debug")
 
 if is_mode("debug") then
