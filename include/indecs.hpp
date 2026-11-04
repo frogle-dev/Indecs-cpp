@@ -30,8 +30,11 @@ template <typename... Components> class Archetype {
     std::vector<Entity> entities;
     std::tuple<std::vector<Components>...> components;
 
-    template <IsInPack T> constexpr auto getComponentVec() -> std::vector<T> & {
-        return std::get<std::vector<std::remove_cvref_t<T>>>(components);
+    /// private since all the vectors in 'components' have to be the same size
+    /// and this is the archetype's responsibility
+    template <IsInPack<Components...> T>
+    constexpr auto getComponentVec() -> std::vector<T> & {
+        return std::get<std::vector<T>>(components);
     }
 
   public:
