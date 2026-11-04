@@ -30,6 +30,14 @@ template <typename... Components> class Archetype {
             components);
     }
 
+    template <typename F> void forEachVector(F &&func) const {
+        std::apply(
+            [&](auto &...vecs) -> void {
+                ((std::forward<F>(func)(vecs)), ...);
+            },
+            components);
+    }
+
   public:
     // using ComponentSet = std::tuple<Ts...>;
 
