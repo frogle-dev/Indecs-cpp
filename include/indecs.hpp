@@ -54,14 +54,13 @@ template <typename... Components> class Archetype {
     }
 
     /// pushes an entity and the archetype data into the archetype
-    void pushBack(Entity entity, Components &...data) {
+    template <typename... Ts>
+        requires(matches<Ts...>)
+    void pushBack(Entity entity, Ts... data) {
         entities.push_back(entity);
 
-        // using ComponentVec<T> = std::vector<std::remove_cvref_t<T>>;
-        (std::get<std::vector<std::remove_cvref_t<Components>>>(components)
-             .pushBack(std::forward(data)),
-         ...);
-    };
+        (getComponentVec<Ts>().push_back(std::move(data)), ...);
+    }
 
     void swapAndDecrSize(size_t idx) {
         if (idx != entities.size() - 1) {
