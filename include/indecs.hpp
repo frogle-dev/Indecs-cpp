@@ -22,30 +22,42 @@ struct Health {
 namespace Indecs {
 using Entity = size_t;
 
-template <typename... Args> class Archetype {
+template <typename T, typename... Ts>
+concept IsInPack = (std::is_same_v<T, Ts> || ...);
+
+// TODO: NO DUPLICATE TYPES IN ARCHETYPE
+template <typename... Components> class Archetype {
     std::vector<Entity> entities;
-    std::tuple<std::vector<Args>...> components;
+    std::tuple<std::vector<Components>...> components;
+
+    template <IsInPack T> constexpr auto getComponentVec() -> std::vector<T> & {
+        return std::get<std::vector<std::remove_cvref_t<T>>>(components);
+    }
 
   public:
-    using ComponentSet = std::tuple<Args...>;
+    // using ComponentSet = std::tuple<Ts...>;
 
-    template <typename T>
-    static constexpr bool has = (std::is_same_v<T, Args> || ...);
-
-    template <typename... Ts> static constexpr auto matches() -> bool {
-        return sizeof...(Ts) == sizeof...(Args) && (has<Ts> && ...);
-    }
+    template <typename... Us>
+    static constexpr bool matches = sizeof...(Us) == sizeof...(Components) &&
+                                    (IsInPack<Us, Components...> && ...);
 
     template <typename F> void forEachVector(F &&func) {
         std::apply(std::forward<F>(func), components);
     }
 
-    void pushBack(Args... data, Entity newEntityId) {
-        entities.push_back(newEntityId);
+    [[nodiscard]]
+    auto size() const -> size_t {
+        return entities.size();
+    }
 
-        forEachVector([&](auto &...vecs) -> void {
-            (vecs.push_back(std::move(data)), ...);
-        });
+    /// pushes an entity and the archetype data into the archetype
+    void pushBack(Entity entity, Components &...data) {
+        entities.push_back(entity);
+
+        // using ComponentVec<T> = std::vector<std::remove_cvref_t<T>>;
+        (std::get<std::vector<std::remove_cvref_t<Components>>>(components)
+             .pushBack(std::forward(data)),
+         ...);
     };
 
     void swapAndDecrSize(size_t idx) {
@@ -73,24 +85,42 @@ template <typename... Archetypes> class World {
 
     std::unordered_map<Entity, EntityLocation> entityLocations;
 
+    Entity nextEntityId = 0;
+
   public:
     World() = default;
     ~World() = default;
 
-    template <typename... Components> constexpr size_t archetypeIdx() {}
+    template <typename... Components>
+    static constexpr auto archetypeIdx() -> size_t {
+        constexpr std::array results{
+            Archetypes::template matches<
+                std::remove_cvref_t<Components>...>()...,
+        };
 
-    template <typename... Components> Entity spawn(Components &&...components) {
-        // remove_cvref_t removes things like const and references and
-        // leaves just the type
-        using Set = std::tuple<std::remove_cvref_t<Components>...>;
-        if constexpr (std::is_same_v<
-                          Set, std::tuple<decltype(player)::ComponentSet>>) {
+        for (size_t i = 0; i < sizeof...(Archetypes); i++) {
+            if (results[i]) {
+                return i;
+            }
         }
-        if constexpr (std::is_same_v<
-                          Set, std::tuple<decltype(enemy)::ComponentSet>>) {
-        }
-        if constexpr (std::is_same_v<Set, std::tuple<decltype(tree)>>) {
-        }
+
+        return sizeof...(Archetypes);
+    }
+
+    template <typename... Components>
+    auto spawn(Components &&...components) -> Entity {
+        constexpr size_t archIdx = archetypeIdx<Components...>();
+        static_assert(archIdx < sizeof...(Archetypes),
+                      "no archetype matches the given components");
+
+        auto &archetype = std::get<archIdx>(archetypes);
+        const Entity entityId = nextEntityId++;
+        const size_t idx = archetype.size();
+
+        archetype.pushBack(entityId, std::forward<Components>(components)...);
+        entityLocations[entityId] = EntityLocation{archetypeIdx, idx};
+
+        return entityId;
     }
 };
 } // namespace Indecs
