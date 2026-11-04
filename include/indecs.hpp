@@ -126,8 +126,8 @@ template <typename... Archetypes> class World {
                       "no archetype matches the given components");
 
         auto &archetype = std::get<archIdx>(archetypes);
-        const Entity entityId = nextEntityId++;
-        const size_t idx = archetype.size();
+        Entity const entityId = nextEntityId++;
+        size_t const idx = archetype.size();
 
         archetype.pushBack(entityId, std::forward<Components>(components)...);
         entityLocations[entityId] = EntityLocation{archetypeIdx, idx};

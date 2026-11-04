@@ -1,2 +1,7 @@
-Checks: 'bugprone-*,modernize-*,readability-*,-mcs*'
-WarningsAsErrors: 'bugprone-*'
+Checks: 'bugprone-*,modernize-*,readability-*,-mcs*,misc-const-correctness,performance-*,clang-analyzer-*,cppcoreguidelines-*'
+WarningsAsErrors: 'bugprone-*,clang-analyzer-*'
+
+CheckOptions:
+  misc-const-correctness.AnalyzePointers: true
+  misc-const-correctness.AnalyzeReferences: true
+  misc-const-correctness.TransformValues: true
