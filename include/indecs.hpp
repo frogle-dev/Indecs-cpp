@@ -43,6 +43,10 @@ template <typename... Components> class Archetype {
     }
 
   public:
+    [[nodiscard]] auto getEntity(size_t idx) const -> Entity {
+        return entities[idx];
+    }
+
     template <IsInPack<Components...> T>
     [[nodiscard]] auto get(size_t idx) const -> T const & {
         return std::get<std::vector<T>>(components)[idx];
@@ -75,7 +79,7 @@ template <typename... Components> class Archetype {
 
     void swapAndDecrSize(size_t idx) {
         if (idx != entities.size() - 1) {
-            entities[idx] = std::move(entities.back());
+            entities[idx] = entities.back();
 
             forEachVector(
                 [&](auto &vec) -> void { (vec[idx] = std::move(vec.back())); });
