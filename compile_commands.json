@@ -1,11 +1,6 @@
 [
 {
   "directory": "/home/jonah/Programming/cpp/Indecs",
-  "arguments": ["/nix/store/0mrixq6x9m44g5a84rkm4v0gravvgrj4-clang-wrapper-22.1.8/bin/clang++", "-c", "-Qunused-arguments", "-m64", "-g", "-Wall", "-Wextra", "-Werror", "-Wpedantic", "-O0", "-std=c++23", "-Iinclude", "-fsanitize=address", "-fsanitize=undefined", "-o", "build/.objs/Indecs/linux/x86_64/debug/src/indecs.cpp.o", "src/indecs.cpp"],
-  "file": "src/indecs.cpp"
-},
-{
-  "directory": "/home/jonah/Programming/cpp/Indecs",
-  "arguments": ["/nix/store/0mrixq6x9m44g5a84rkm4v0gravvgrj4-clang-wrapper-22.1.8/bin/clang++", "-c", "-Qunused-arguments", "-m64", "-g", "-Wall", "-Wextra", "-Werror", "-Wpedantic", "-O0", "-std=c++23", "-Iinclude", "-fsanitize=address", "-fsanitize=undefined", "-o", "build/.objs/Indecs/linux/x86_64/debug/tests/main.cpp.o", "tests/main.cpp"],
+  "arguments": ["/nix/store/0mrixq6x9m44g5a84rkm4v0gravvgrj4-clang-wrapper-22.1.8/bin/clang++", "-c", "-Qunused-arguments", "-m64", "-g", "-Wall", "-Wextra", "-Werror", "-Wpedantic", "-O0", "-std=c++23", "-Iinclude", "-I", "/home/jonah/.xmake/packages/c/catch2/v3.16.1/c83fbb082d364e3b90195622a065af8b/include", "-fsanitize=address", "-fsanitize=undefined", "-o", "build/.objs/Tests/linux/x86_64/debug/tests/main.cpp.o", "tests/main.cpp"],
   "file": "tests/main.cpp"
 }]

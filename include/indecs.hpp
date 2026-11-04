@@ -21,16 +21,20 @@ template <typename... Components> class Archetype {
         return std::get<std::vector<T>>(components);
     }
 
+    template <typename F> void forEachVector(F &&func) {
+        std::apply(
+            [&](auto &...vecs) -> void {
+                ((std::forward<F>(func)(vecs)), ...);
+            },
+            components);
+    }
+
   public:
     // using ComponentSet = std::tuple<Ts...>;
 
     template <typename... Us>
     static constexpr bool matches = sizeof...(Us) == sizeof...(Components) &&
                                     (IsInPack<Us, Components...> && ...);
-
-    template <typename F> void forEachVector(F &&func) {
-        std::apply(std::forward<F>(func), components);
-    }
 
     [[nodiscard]]
     auto size() const -> size_t {
@@ -48,14 +52,13 @@ template <typename... Components> class Archetype {
         if (idx != entities.size() - 1) {
             entities[idx] = std::move(entities.back());
 
-            forEachVector([&](auto &...vecs) -> void {
-                ((vecs[idx] = std::move(vecs.back())), ...);
-            });
+            forEachVector(
+                [&](auto &vec) -> void { (vec[idx] = std::move(vec.back())); });
         }
 
         entities.pop_back();
 
-        forEachVector([&](auto &...vecs) -> void { ((vecs.pop_back()), ...); });
+        forEachVector([&](auto &vec) -> void { ((vec.pop_back())); });
     }
 };
 
