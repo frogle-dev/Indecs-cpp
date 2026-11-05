@@ -21,3 +21,16 @@ TEST_CASE("World archetypeIdx", "[world]") {
     CHECK(world.archetypeIdx<Fighter>() == 2);
     CHECK(world.archetypeIdx<Prop>() == 3);
 }
+
+TEST_CASE("World spawn", "[world]") {
+    using Mover = Archetype<Position, Velocity>;
+    using Physical = Archetype<Position, Velocity, Acceleration>;
+    using Fighter = Archetype<Health, Attack>;
+    using Prop = Archetype<Position, Name>;
+
+    using GameWorld = idcs::World<Mover, Physical, Fighter, Prop>;
+
+    GameWorld world;
+
+    world.spawn<Mover>(Position{1, 2}, Velocity{3, 4});
+}

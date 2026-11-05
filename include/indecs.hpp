@@ -122,7 +122,10 @@ template <IsArchetype... Archetypes> class World {
     // }
 
     template <IsArchetype Target>
-        requires(std::is_same_v<Target, Archetypes> || ...)
+    static constexpr bool archetypeInWorld = (std::is_same_v<Target, Archetypes> || ...);
+
+    template <IsArchetype Target>
+        requires(archetypeInWorld<Target>)
     static constexpr auto archetypeIdx() -> size_t {
         constexpr std::array matching{std::is_same_v<Target, Archetypes>...};
 
@@ -135,19 +138,18 @@ template <IsArchetype... Archetypes> class World {
         std::unreachable();
     }
 
-    // template <typename... Components> auto spawn(Components &&...components) -> Entity {
-    //     constexpr size_t archIdx = archetypeIdx<Components...>();
-    //     static_assert(archIdx < sizeof...(Archetypes), "no archetype matches the given
-    //     components");
-    //
-    //     auto &archetype = std::get<archIdx>(archetypes);
-    //     Entity const entityId = nextEntityId++;
-    //     size_t const idx = archetype.size();
-    //
-    //     archetype.pushBack(entityId, std::forward<Components>(components)...);
-    //     entityLocations[entityId] = EntityLocation{archetypeIdx, idx};
-    //
-    //     return entityId;
-    // }
+    template <IsArchetype Target, typename... Cs>
+        requires(archetypeInWorld<Target> && Target::template matches<Cs...>)
+    auto spawn(Cs... components) -> Entity {
+        auto &archetype = std::get<Target>(archetypes);
+
+        Entity const entityId = nextEntityId++;
+        archetype.pushBack(entityId, std::move(components)...);
+
+        size_t const idx = archetype.size();
+        entityLocations[entityId] = EntityLocation{archetypeIdx<Target>(), idx};
+
+        return entityId;
+    }
 };
 } // namespace idcs
