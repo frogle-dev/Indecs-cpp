@@ -1,5 +1,6 @@
 #pragma once
 
+#include <array>
 #include <cassert>
 #include <cstddef>
 #include <tuple>
@@ -21,45 +22,34 @@ template <typename... Components> class Archetype {
 
     /// private since all the vectors in 'components' have to be the same size
     /// and this is the archetype's responsibility
-    template <IsInPack<Components...> T>
-    constexpr auto getComponentVec() -> std::vector<T> & {
+    template <IsInPack<Components...> T> constexpr auto getComponentVec() -> std::vector<T> & {
         return std::get<std::vector<T>>(components);
     }
 
     template <typename F> void forEachVector(F &&func) {
-        std::apply(
-            [&](auto &...vecs) -> void {
-                ((std::forward<F>(func)(vecs)), ...);
-            },
-            components);
+        std::apply([&](auto &...vecs) -> void { ((std::forward<F>(func)(vecs)), ...); },
+                   components);
     }
 
     template <typename F> void forEachVector(F &&func) const {
-        std::apply(
-            [&](auto &...vecs) -> void {
-                ((std::forward<F>(func)(vecs)), ...);
-            },
-            components);
+        std::apply([&](auto &...vecs) -> void { ((std::forward<F>(func)(vecs)), ...); },
+                   components);
     }
 
   public:
-    [[nodiscard]] auto getEntity(size_t idx) const -> Entity {
-        return entities[idx];
-    }
+    [[nodiscard]] auto getEntity(size_t idx) const -> Entity { return entities[idx]; }
 
-    template <IsInPack<Components...> T>
-    [[nodiscard]] auto get(size_t idx) const -> T const & {
+    template <IsInPack<Components...> T> [[nodiscard]] auto get(size_t idx) const -> T const & {
         return std::get<std::vector<T>>(components)[idx];
     }
 
     template <typename... Us>
-    static constexpr bool matches = sizeof...(Us) == sizeof...(Components) &&
-                                    (IsInPack<Us, Components...> && ...);
+    static constexpr bool matches =
+        sizeof...(Us) == sizeof...(Components) && (IsInPack<Us, Components...> && ...);
 
     void assertSameSizes() const {
 #ifndef NDEBUG
-        forEachVector(
-            [&](auto &vec) -> void { assert(vec.size() == entities.size()); });
+        forEachVector([&](auto &vec) -> void { assert(vec.size() == entities.size()); });
 #endif
     }
 
@@ -81,8 +71,7 @@ template <typename... Components> class Archetype {
         if (idx != entities.size() - 1) {
             entities[idx] = entities.back();
 
-            forEachVector(
-                [&](auto &vec) -> void { (vec[idx] = std::move(vec.back())); });
+            forEachVector([&](auto &vec) -> void { (vec[idx] = std::move(vec.back())); });
         }
 
         entities.pop_back();
@@ -98,7 +87,13 @@ struct EntityLocation {
     size_t idx;
 };
 
-template <typename... Archetypes> class World {
+template <typename T> struct IsArchetypeImpl : std::false_type {};
+template <typename... Cs> struct IsArchetypeImpl<Archetype<Cs...>> : std::true_type {};
+
+template <typename T>
+concept IsArchetype = IsArchetypeImpl<T>::value;
+
+template <IsArchetype... Archetypes> class World {
     std::tuple<Archetypes...> archetypes;
 
     std::unordered_map<Entity, EntityLocation> entityLocations;
@@ -110,10 +105,10 @@ template <typename... Archetypes> class World {
     ~World() = default;
 
     template <typename... Components>
+        requires(Archetypes::template matches<std::remove_cvref_t<Components>...> || ...)
     static constexpr auto archetypeIdx() -> size_t {
         constexpr std::array results{
-            Archetypes::template matches<
-                std::remove_cvref_t<Components>...>()...,
+            Archetypes::template matches<std::remove_cvref_t<Components>...>...,
         };
 
         for (size_t i = 0; i < sizeof...(Archetypes); i++) {
@@ -122,14 +117,13 @@ template <typename... Archetypes> class World {
             }
         }
 
-        return sizeof...(Archetypes);
+        static_assert(false, "archetypeIdx constrained to be types that must work for this "
+                             "function, therefore issue with requires code");
     }
 
-    template <typename... Components>
-    auto spawn(Components &&...components) -> Entity {
+    template <typename... Components> auto spawn(Components &&...components) -> Entity {
         constexpr size_t archIdx = archetypeIdx<Components...>();
-        static_assert(archIdx < sizeof...(Archetypes),
-                      "no archetype matches the given components");
+        static_assert(archIdx < sizeof...(Archetypes), "no archetype matches the given components");
 
         auto &archetype = std::get<archIdx>(archetypes);
         Entity const entityId = nextEntityId++;
