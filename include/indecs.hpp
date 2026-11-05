@@ -77,7 +77,7 @@ template <typename... Components> class Archetype {
         assertSameSizes();
     }
 
-    void swapAndDecrSize(size_t idx) {
+    void swapAndPop(size_t idx) {
         if (idx != entities.size() - 1) {
             entities[idx] = entities.back();
 
@@ -88,6 +88,8 @@ template <typename... Components> class Archetype {
         entities.pop_back();
 
         forEachVector([&](auto &vec) -> void { ((vec.pop_back())); });
+
+        assertSameSizes();
     }
 };
 

@@ -16,7 +16,7 @@ set_kind("headeronly")
 add_headerfiles("include/indecs.hpp")
 add_includedirs("include", { public = true })
 
-target("Tests")
+target("Tests")    -- to test do 'xmake run Tests', 'xmake test' wont show the catch2 output
 set_kind("binary")
 set_default(false) -- has to be run expicitly with xmake test
 add_files("tests/*.cpp")
