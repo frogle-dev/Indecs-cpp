@@ -9,7 +9,7 @@
 #include <utility>
 #include <vector>
 
-namespace Indecs {
+namespace idcs {
 using Entity = size_t;
 
 template <typename T, typename... Ts>
@@ -104,35 +104,50 @@ template <IsArchetype... Archetypes> class World {
     World() = default;
     ~World() = default;
 
-    template <typename... Components>
-        requires(Archetypes::template matches<std::remove_cvref_t<Components>...> || ...)
+    // template <typename... Components>
+    //     requires(Archetypes::template matches<std::remove_cvref_t<Components>...> || ...)
+    // static constexpr auto archetypeIdx() -> size_t {
+    //     constexpr std::array results{
+    //         Archetypes::template matches<std::remove_cvref_t<Components>...>...,
+    //     };
+    //
+    //     for (size_t i = 0; i < sizeof...(Archetypes); i++) {
+    //         if (results[i]) {
+    //             return i;
+    //         }
+    //     }
+    //
+    //     static_assert(false, "archetypeIdx constrained to be types that must work for this "
+    //                          "function, therefore issue with requires code");
+    // }
+
+    template <IsArchetype Target>
+        requires(std::is_same_v<Target, Archetypes> || ...)
     static constexpr auto archetypeIdx() -> size_t {
-        constexpr std::array results{
-            Archetypes::template matches<std::remove_cvref_t<Components>...>...,
-        };
+        constexpr std::array matching{std::is_same_v<Target, Archetypes>...};
 
         for (size_t i = 0; i < sizeof...(Archetypes); i++) {
-            if (results[i]) {
+            if (matching[i]) {
                 return i;
             }
         }
 
-        static_assert(false, "archetypeIdx constrained to be types that must work for this "
-                             "function, therefore issue with requires code");
+        std::unreachable();
     }
 
-    template <typename... Components> auto spawn(Components &&...components) -> Entity {
-        constexpr size_t archIdx = archetypeIdx<Components...>();
-        static_assert(archIdx < sizeof...(Archetypes), "no archetype matches the given components");
-
-        auto &archetype = std::get<archIdx>(archetypes);
-        Entity const entityId = nextEntityId++;
-        size_t const idx = archetype.size();
-
-        archetype.pushBack(entityId, std::forward<Components>(components)...);
-        entityLocations[entityId] = EntityLocation{archetypeIdx, idx};
-
-        return entityId;
-    }
+    // template <typename... Components> auto spawn(Components &&...components) -> Entity {
+    //     constexpr size_t archIdx = archetypeIdx<Components...>();
+    //     static_assert(archIdx < sizeof...(Archetypes), "no archetype matches the given
+    //     components");
+    //
+    //     auto &archetype = std::get<archIdx>(archetypes);
+    //     Entity const entityId = nextEntityId++;
+    //     size_t const idx = archetype.size();
+    //
+    //     archetype.pushBack(entityId, std::forward<Components>(components)...);
+    //     entityLocations[entityId] = EntityLocation{archetypeIdx, idx};
+    //
+    //     return entityId;
+    // }
 };
-} // namespace Indecs
+} // namespace idcs
