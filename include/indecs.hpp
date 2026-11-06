@@ -10,7 +10,13 @@
 #include <vector>
 
 namespace idcs {
-using Entity = size_t; /// TODO: maybe encode type with entity somehow?
+using Entity = size_t;
+
+// template <typename T> struct Entity {
+//     using Archetype = T;
+//
+//     size_t id;
+// };
 
 template <typename T, typename... Ts>
 concept IsInPack = (std::is_same_v<T, Ts> || ...);
@@ -155,17 +161,17 @@ template <IsArchetype... Archetypes> class World {
         return entityId;
     }
 
-    // void despawn(Entity entity) {
-    //     auto loc = entityLocations.at(entity);
-    //
-    //     auto &archetype = std::get<loc.archetype>(archetypes);
-    //     archetype.swapAndPop(loc.idx);
-    //
-    //     entityLocations.erase(entity);
-    //
-    //     EntityLocation &swappedLoc = entityLocations.at(archetype.getEntity(loc.idx));
-    //     swappedLoc.idx = loc.idx;
-    // }
+    template <IsArchetype Target> void despawn(Entity entity) {
+        auto loc = entityLocations.at(entity);
+
+        auto &archetype = std::get<Target>(archetypes);
+        archetype.swapAndPop(loc.idx);
+
+        entityLocations.erase(entity);
+
+        EntityLocation &swappedLoc = entityLocations.at(archetype.getEntity(loc.idx));
+        swappedLoc.idx = loc.idx;
+    }
 
     auto entityExists(Entity entity) const -> bool { return entityLocations.contains(entity); }
     auto getIdx(Entity entity) const -> size_t { return entityLocations.at(entity).idx; }
