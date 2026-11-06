@@ -1,4 +1,4 @@
-Checks: 'bugprone-*,modernize-*,readability-*,-mcs*,misc-const-correctness,performance-*,clang-analyzer-*,cppcoreguidelines-pro-type-member-init,cppcoreguidelines-owning-memory'
+Checks: 'bugprone-*,modernize-*,readability-*,-mcs*,misc-const-correctness,performance-*,clang-analyzer-*,cppcoreguidelines-pro-type-member-init,cppcoreguidelines-owning-memory,-readability-magic-numbers'
 WarningsAsErrors: 'bugprone-*,clang-analyzer-*'
 
 CheckOptions:

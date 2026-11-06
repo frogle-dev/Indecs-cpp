@@ -2,6 +2,8 @@
 
 struct Name {
     std::string name;
+
+    auto operator==(Name const &) const -> bool = default;
 };
 
 struct Position {
