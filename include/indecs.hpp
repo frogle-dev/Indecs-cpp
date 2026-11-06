@@ -12,12 +12,6 @@
 namespace idcs {
 using Entity = size_t;
 
-// template <typename T> struct Entity {
-//     using Archetype = T;
-//
-//     size_t id;
-// };
-
 template <typename T, typename... Ts>
 concept IsInPack = (std::is_same_v<T, Ts> || ...);
 
@@ -126,7 +120,7 @@ template <IsArchetype... Archetypes> class World {
 
     template <IsArchetype Target>
         requires(archetypeInWorld<Target>)
-    static constexpr auto archetypeIdx() -> size_t {
+    static constexpr size_t archetypeIdx = []() -> size_t {
         constexpr std::array matching{std::is_same_v<Target, Archetypes>...};
 
         for (size_t i = 0; i < sizeof...(Archetypes); i++) {
@@ -136,11 +130,18 @@ template <IsArchetype... Archetypes> class World {
         }
 
         std::unreachable();
-    }
+    }();
 
     // TODO: use std expected for entityExists
     [[nodiscard]] auto entityArchetypeIdx(Entity entity) const -> size_t {
         return entityLocations.at(entity).archetype;
+    }
+
+    template <typename F> void visitArchetype(size_t idx, F &&func) {
+        [&]<size_t... Is>(std::index_sequence<Is...>) -> void {
+            // cast to void avoids unused value warning
+            (void)((idx == Is ? (func(std::get<Is>(archetypes)), true) : false) || ...);
+        }(std::index_sequence_for<Archetypes...>{});
     }
 
     template <IsArchetype Target>
@@ -156,21 +157,22 @@ template <IsArchetype... Archetypes> class World {
             components);
 
         size_t const idx = archetype.size() - 1;
-        entityLocations[entityId] = EntityLocation{archetypeIdx<Target>(), idx};
+        entityLocations[entityId] = EntityLocation{archetypeIdx<Target>, idx};
 
         return entityId;
     }
 
-    template <IsArchetype Target> void despawn(Entity entity) {
+    void despawn(Entity entity) {
         auto loc = entityLocations.at(entity);
 
-        auto &archetype = std::get<Target>(archetypes);
-        archetype.swapAndPop(loc.idx);
+        visitArchetype(loc.archetype, [&](auto &archetype) -> void {
+            archetype.swapAndPop(loc.idx);
+
+            EntityLocation &swappedLoc = entityLocations.at(archetype.getEntity(loc.idx));
+            swappedLoc.idx = loc.idx;
+        });
 
         entityLocations.erase(entity);
-
-        EntityLocation &swappedLoc = entityLocations.at(archetype.getEntity(loc.idx));
-        swappedLoc.idx = loc.idx;
     }
 
     auto entityExists(Entity entity) const -> bool { return entityLocations.contains(entity); }

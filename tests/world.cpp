@@ -17,10 +17,10 @@ using GameWorld = idcs::World<Mover, Physical, Fighter, Prop>;
 TEST_CASE("World archetypeIdx", "[world]") {
     GameWorld world;
 
-    CHECK(world.archetypeIdx<Mover>() == 0);
-    CHECK(world.archetypeIdx<Physical>() == 1);
-    CHECK(world.archetypeIdx<Fighter>() == 2);
-    CHECK(world.archetypeIdx<Prop>() == 3);
+    CHECK(world.archetypeIdx<Mover> == 0);
+    CHECK(world.archetypeIdx<Physical> == 1);
+    CHECK(world.archetypeIdx<Fighter> == 2);
+    CHECK(world.archetypeIdx<Prop> == 3);
 }
 
 TEST_CASE("World spawn same archetype", "[world]") {
@@ -114,7 +114,7 @@ TEST_CASE("World despawn same archetype, 1st entity", "[world]") {
     Entity square = world.spawn<Mover>({Position{.x = 2, .y = 3}, Velocity{.vx = 4, .vy = 5}});
     Entity triangle = world.spawn<Mover>({Position{.x = 3, .y = 4}, Velocity{.vx = 5, .vy = 6}});
 
-    world.despawn<Mover>(ball);
+    world.despawn(ball);
 
     REQUIRE(!world.entityExists(ball));
     REQUIRE(world.entityExists(square));
