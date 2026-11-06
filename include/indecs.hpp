@@ -10,7 +10,7 @@
 #include <vector>
 
 namespace idcs {
-using Entity = size_t;
+using Entity = size_t; /// TODO: maybe encode type with entity somehow?
 
 template <typename T, typename... Ts>
 concept IsInPack = (std::is_same_v<T, Ts> || ...);
@@ -96,6 +96,7 @@ template <IsArchetype... Archetypes> class World {
 
     std::unordered_map<Entity, EntityLocation> entityLocations;
 
+    /// TODO: potentially a list of despawned entityIds to reuse
     Entity nextEntityId = 0;
 
     template <IsArchetype Target>
@@ -133,9 +134,6 @@ template <IsArchetype... Archetypes> class World {
 
     // TODO: use std expected for entityExists
     [[nodiscard]] auto entityArchetypeIdx(Entity entity) const -> size_t {
-        if (!entityExists(entity)) {
-        } // TODO: do something
-
         return entityLocations.at(entity).archetype;
     }
 
@@ -155,6 +153,18 @@ template <IsArchetype... Archetypes> class World {
         entityLocations[entityId] = EntityLocation{archetypeIdx<Target>(), idx};
 
         return entityId;
+    }
+
+    void despawn(Entity entity) {
+        auto loc = entityLocations.at(entity);
+
+        auto &archetype = std::get<loc.archetype>(archetypes);
+        archetype.swapAndPop(loc.idx);
+
+        entityLocations.erase(entity);
+
+        EntityLocation &swappedLoc = entityLocations.at(archetype.getEntity(loc.idx));
+        swappedLoc.idx = loc.idx;
     }
 
     auto entityExists(Entity entity) const -> bool { return entityLocations.contains(entity); }
