@@ -7,3 +7,5 @@ build/
 
 .direnv/
 .envrc
+
+compile_commands.json
