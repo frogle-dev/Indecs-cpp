@@ -32,5 +32,8 @@ TEST_CASE("World spawn", "[world]") {
 
     GameWorld world;
 
-    world.spawn<Mover>(Position{1, 2}, Velocity{3, 4});
+    idcs::Entity ball = world.spawn<Mover>({Position{.x = 1, .y = 2}, Velocity{.vx = 3, .vy = 4}});
+
+    CHECK(world.entityExists(ball));
+    CHECK(world.entityArchetypeIdx(ball) == 0);
 }

@@ -37,15 +37,17 @@ template <typename... Components> class Archetype {
     }
 
   public:
+    using ComponentSet = std::tuple<Components...>;
+
     [[nodiscard]] auto getEntity(size_t idx) const -> Entity { return entities[idx]; }
 
     template <IsInPack<Components...> T> [[nodiscard]] auto get(size_t idx) const -> T const & {
         return std::get<std::vector<T>>(components)[idx];
     }
 
-    template <typename... Us>
-    static constexpr bool matches =
-        sizeof...(Us) == sizeof...(Components) && (IsInPack<Us, Components...> && ...);
+    // template <typename... Us>
+    // static constexpr bool matches =
+    //     sizeof...(Us) == sizeof...(Components) && (IsInPack<Us, Components...> && ...);
 
     void assertSameSizes() const {
 #ifndef NDEBUG
@@ -138,18 +140,32 @@ template <IsArchetype... Archetypes> class World {
         std::unreachable();
     }
 
-    template <IsArchetype Target, typename... Cs>
-        requires(archetypeInWorld<Target> && Target::template matches<Cs...>)
-    auto spawn(Cs... components) -> Entity {
+    template <IsArchetype Target>
+        requires(archetypeInWorld<Target>)
+    auto spawn(Target::ComponentSet components) -> Entity {
         auto &archetype = std::get<Target>(archetypes);
 
         Entity const entityId = nextEntityId++;
-        archetype.pushBack(entityId, std::move(components)...);
+        std::apply(
+            [&](auto &...components) -> void {
+                archetype.pushBack(entityId, std::move(components)...);
+            },
+            components);
 
-        size_t const idx = archetype.size();
+        size_t const idx = archetype.size() - 1;
         entityLocations[entityId] = EntityLocation{archetypeIdx<Target>(), idx};
 
         return entityId;
+    }
+
+    auto entityExists(Entity entity) const -> bool { return entityLocations.contains(entity); }
+
+    // TODO: use std expected for entityExists
+    [[nodiscard]] auto entityArchetypeIdx(Entity entity) const -> size_t {
+        if (!entityExists(entity)) {
+        } // TODO: do something
+
+        return entityLocations.at(entity).archetype;
     }
 };
 } // namespace idcs
