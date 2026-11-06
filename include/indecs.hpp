@@ -45,10 +45,6 @@ template <typename... Components> class Archetype {
         return std::get<std::vector<T>>(components)[idx];
     }
 
-    // template <typename... Us>
-    // static constexpr bool matches =
-    //     sizeof...(Us) == sizeof...(Components) && (IsInPack<Us, Components...> && ...);
-
     void assertSameSizes() const {
 #ifndef NDEBUG
         forEachVector([&](auto &vec) -> void { assert(vec.size() == entities.size()); });
@@ -102,29 +98,24 @@ template <IsArchetype... Archetypes> class World {
 
     Entity nextEntityId = 0;
 
+    template <IsArchetype Target>
+    static constexpr bool archetypeInWorld = (std::is_same_v<Target, Archetypes> || ...);
+
+    template <IsArchetype Target>
+        requires(archetypeInWorld<Target>)
+    [[nodiscard]] auto getArchetypeRef() -> Target & {
+        return std::get<Target>(archetypes);
+    }
+
   public:
     World() = default;
     ~World() = default;
 
-    // template <typename... Components>
-    //     requires(Archetypes::template matches<std::remove_cvref_t<Components>...> || ...)
-    // static constexpr auto archetypeIdx() -> size_t {
-    //     constexpr std::array results{
-    //         Archetypes::template matches<std::remove_cvref_t<Components>...>...,
-    //     };
-    //
-    //     for (size_t i = 0; i < sizeof...(Archetypes); i++) {
-    //         if (results[i]) {
-    //             return i;
-    //         }
-    //     }
-    //
-    //     static_assert(false, "archetypeIdx constrained to be types that must work for this "
-    //                          "function, therefore issue with requires code");
-    // }
-
     template <IsArchetype Target>
-    static constexpr bool archetypeInWorld = (std::is_same_v<Target, Archetypes> || ...);
+        requires(archetypeInWorld<Target>)
+    [[nodiscard]] auto getArchetype() const -> Target const & {
+        return std::get<Target>(archetypes);
+    }
 
     template <IsArchetype Target>
         requires(archetypeInWorld<Target>)
@@ -140,10 +131,18 @@ template <IsArchetype... Archetypes> class World {
         std::unreachable();
     }
 
+    // TODO: use std expected for entityExists
+    [[nodiscard]] auto entityArchetypeIdx(Entity entity) const -> size_t {
+        if (!entityExists(entity)) {
+        } // TODO: do something
+
+        return entityLocations.at(entity).archetype;
+    }
+
     template <IsArchetype Target>
         requires(archetypeInWorld<Target>)
     auto spawn(Target::ComponentSet components) -> Entity {
-        auto &archetype = std::get<Target>(archetypes);
+        auto &archetype = getArchetypeRef<Target>();
 
         Entity const entityId = nextEntityId++;
         std::apply(
@@ -159,13 +158,6 @@ template <IsArchetype... Archetypes> class World {
     }
 
     auto entityExists(Entity entity) const -> bool { return entityLocations.contains(entity); }
-
-    // TODO: use std expected for entityExists
-    [[nodiscard]] auto entityArchetypeIdx(Entity entity) const -> size_t {
-        if (!entityExists(entity)) {
-        } // TODO: do something
-
-        return entityLocations.at(entity).archetype;
-    }
+    auto getIdx(Entity entity) const -> size_t { return entityLocations.at(entity).idx; }
 };
 } // namespace idcs
