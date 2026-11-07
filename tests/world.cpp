@@ -160,3 +160,59 @@ TEST_CASE("World despawn, last entity", "[world][despawn]") {
     CHECK(world.getArchetype<Mover>().get<Position>(1) == Position{2, 3});
     CHECK(world.getArchetype<Mover>().get<Velocity>(1) == Velocity{4, 5});
 }
+
+TEST_CASE("World despawn on size 1 archetype", "[world][despawn]") {
+    GameWorld world;
+
+    Entity ball = world.spawn<Mover>({Position{.x = 1, .y = 2}, Velocity{.vx = 3, .vy = 4}});
+
+    world.despawn(ball);
+
+    REQUIRE(!world.entityExists(ball));
+
+    REQUIRE(world.getArchetype<Mover>().size() == 0);
+
+    Entity ball2 = world.spawn<Mover>({Position{.x = 10, .y = 20}, Velocity{.vx = 30, .vy = 40}});
+
+    // state should be valid after clearing the world
+    CHECK(world.getIdx(ball2) == 0);
+    CHECK(world.getArchetype<Mover>().size() == 1);
+    CHECK(world.getArchetype<Mover>().getEntity(0) == ball2);
+    CHECK(world.getArchetype<Mover>().get<Position>(0) == Position{10, 20});
+    CHECK(world.getArchetype<Mover>().get<Velocity>(0) == Velocity{30, 40});
+}
+
+TEST_CASE("World despawn multiple entity", "[world][despawn]") {
+    GameWorld world;
+
+    Entity a = world.spawn<Mover>({Position{.x = 1, .y = 2}, Velocity{.vx = 3, .vy = 4}});
+    Entity b = world.spawn<Mover>({Position{.x = 2, .y = 3}, Velocity{.vx = 4, .vy = 5}});
+    Entity c = world.spawn<Mover>({Position{.x = 3, .y = 4}, Velocity{.vx = 5, .vy = 6}});
+    Entity d = world.spawn<Mover>({Position{.x = 4, .y = 5}, Velocity{.vx = 6, .vy = 7}});
+    Entity e = world.spawn<Mover>({Position{.x = 5, .y = 6}, Velocity{.vx = 7, .vy = 8}});
+    Entity f = world.spawn<Mover>({Position{.x = 6, .y = 7}, Velocity{.vx = 8, .vy = 9}});
+
+    world.despawn(f);
+    world.despawn(e);
+    world.despawn(a);
+    world.despawn(c);
+
+    REQUIRE(!world.entityExists(f));
+    REQUIRE(!world.entityExists(e));
+    REQUIRE(!world.entityExists(a));
+    REQUIRE(!world.entityExists(c));
+    REQUIRE(world.entityExists(b));
+    REQUIRE(world.entityExists(d));
+
+    REQUIRE(world.getArchetype<Mover>().size() == 2);
+
+    CHECK(world.getIdx(d) == 0);
+    CHECK(world.getArchetype<Mover>().getEntity(0) == d);
+    CHECK(world.getArchetype<Mover>().get<Position>(0) == Position{4, 5});
+    CHECK(world.getArchetype<Mover>().get<Velocity>(0) == Velocity{6, 7});
+
+    CHECK(world.getIdx(b) == 1);
+    CHECK(world.getArchetype<Mover>().getEntity(1) == b);
+    CHECK(world.getArchetype<Mover>().get<Position>(1) == Position{2, 3});
+    CHECK(world.getArchetype<Mover>().get<Velocity>(1) == Velocity{4, 5});
+}

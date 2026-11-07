@@ -13,7 +13,7 @@ namespace idcs {
 using Entity = size_t;
 
 template <typename T, typename... Ts>
-concept IsInPack = (std::is_same_v<T, Ts> || ...); // != ?
+concept IsInPack = (std::is_same_v<T, Ts> || ...);
 
 // TODO: NO DUPLICATE TYPES IN ARCHETYPE
 template <typename... Components> class Archetype {
