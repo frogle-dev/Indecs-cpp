@@ -23,7 +23,7 @@ TEST_CASE("World archetypeIdx", "[world]") {
     CHECK(world.archetypeIdx<Prop> == 3);
 }
 
-TEST_CASE("World spawn same archetype", "[world]") {
+TEST_CASE("World spawn same archetype", "[world][spawn]") {
     GameWorld world;
 
     Entity ball = world.spawn<Mover>({Position{.x = 1, .y = 2}, Velocity{.vx = 3, .vy = 4}});
@@ -54,7 +54,7 @@ TEST_CASE("World spawn same archetype", "[world]") {
     CHECK(world.getArchetype<Mover>().get<Velocity>(2) == Velocity{5, 6});
 }
 
-TEST_CASE("World spawn different archetype", "[world]") {
+TEST_CASE("World spawn different archetype", "[world][spawn]") {
     GameWorld world;
 
     Entity ball = world.spawn<Mover>({
@@ -107,7 +107,7 @@ TEST_CASE("World spawn different archetype", "[world]") {
     CHECK(world.getArchetype<Prop>().get<Name>(0) == Name{"woody"});
 }
 
-TEST_CASE("World despawn same archetype, 1st entity", "[world]") {
+TEST_CASE("World despawn same archetype, 1st entity", "[world][despawn]") {
     GameWorld world;
 
     Entity ball = world.spawn<Mover>({Position{.x = 1, .y = 2}, Velocity{.vx = 3, .vy = 4}});
@@ -132,4 +132,31 @@ TEST_CASE("World despawn same archetype, 1st entity", "[world]") {
     CHECK(world.getArchetype<Mover>().getEntity(0) == triangle);
     CHECK(world.getArchetype<Mover>().get<Position>(0) == Position{3, 4});
     CHECK(world.getArchetype<Mover>().get<Velocity>(0) == Velocity{5, 6});
+}
+
+TEST_CASE("World despawn, last entity", "[world][despawn]") {
+    GameWorld world;
+
+    Entity ball = world.spawn<Mover>({Position{.x = 1, .y = 2}, Velocity{.vx = 3, .vy = 4}});
+    Entity square = world.spawn<Mover>({Position{.x = 2, .y = 3}, Velocity{.vx = 4, .vy = 5}});
+    Entity triangle = world.spawn<Mover>({Position{.x = 3, .y = 4}, Velocity{.vx = 5, .vy = 6}});
+
+    world.despawn(triangle);
+
+    REQUIRE(world.entityExists(ball));
+    REQUIRE(world.entityExists(square));
+    REQUIRE(!world.entityExists(triangle));
+
+    REQUIRE(world.getArchetype<Mover>().size() == 2);
+
+    CHECK(world.getIdx(ball) == 0);
+    CHECK(world.getArchetype<Mover>().getEntity(0) == ball);
+    CHECK(world.getArchetype<Mover>().get<Position>(0) == Position{1, 2});
+    CHECK(world.getArchetype<Mover>().get<Velocity>(0) == Velocity{3, 4});
+
+    // swapped to first spot
+    CHECK(world.getIdx(square) == 1);
+    CHECK(world.getArchetype<Mover>().getEntity(1) == square);
+    CHECK(world.getArchetype<Mover>().get<Position>(1) == Position{2, 3});
+    CHECK(world.getArchetype<Mover>().get<Velocity>(1) == Velocity{4, 5});
 }

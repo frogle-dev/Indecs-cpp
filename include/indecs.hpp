@@ -13,7 +13,7 @@ namespace idcs {
 using Entity = size_t;
 
 template <typename T, typename... Ts>
-concept IsInPack = (std::is_same_v<T, Ts> || ...);
+concept IsInPack = (std::is_same_v<T, Ts> || ...); // != ?
 
 // TODO: NO DUPLICATE TYPES IN ARCHETYPE
 template <typename... Components> class Archetype {
@@ -168,8 +168,10 @@ template <IsArchetype... Archetypes> class World {
         visitArchetype(loc.archetype, [&](auto &archetype) -> void {
             archetype.swapAndPop(loc.idx);
 
-            EntityLocation &swappedLoc = entityLocations.at(archetype.getEntity(loc.idx));
-            swappedLoc.idx = loc.idx;
+            if (loc.idx < archetype.size()) {
+                EntityLocation &swappedLoc = entityLocations.at(archetype.getEntity(loc.idx));
+                swappedLoc.idx = loc.idx;
+            }
         });
 
         entityLocations.erase(entity);
